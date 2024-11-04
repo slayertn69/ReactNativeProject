@@ -1,50 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, Image, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
- 
+import { ThemeContext } from '../ThemeContext';
+
 export default function EntryDetailsScreen() {
+  const { isDarkMode } = useContext(ThemeContext);
   const navigation = useNavigation();
   const route = useRoute();
-  const { entry } = route.params; // Récupérer l'entrée passée
- 
+  const { entry } = route.params;
+
   const [entries, setEntries] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false); // État pour contrôler la visibilité du modal
- 
+  const [modalVisible, setModalVisible] = useState(false);
+
   const loadEntries = async () => {
     const savedEntries = await AsyncStorage.getItem('journalEntries');
     const entries = savedEntries ? JSON.parse(savedEntries) : [];
     setEntries(entries);
     console.log("Loaded entries:", entries);
   };
- 
+
   useEffect(() => {
     loadEntries();
   }, []);
- 
+
   const deleteEntry = async () => {
     try {
       const updatedEntries = entries.filter((e) => e.id !== entry.id);
       await AsyncStorage.setItem('journalEntries', JSON.stringify(updatedEntries));
-      setEntries(updatedEntries); // Mettre à jour l'état local
-      navigation.navigate('Home'); // Retourner à la page d'accueil
+      setEntries(updatedEntries);
+      navigation.navigate('Home');
     } catch (error) {
       console.error('Erreur lors de la suppression de l’entrée:', error);
     }
   };
- 
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.date}>{entry.date}</Text>
-      <Text style={styles.title}>{entry.title}</Text>
-      <Text style={styles.content}>{entry.content}</Text>
+    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
+      <Text style={[styles.date, isDarkMode ? styles.darkText : styles.lightText]}>{entry.date}</Text>
+      <Text style={[styles.title, isDarkMode ? styles.darkText : styles.lightText]}>{entry.title}</Text>
+      <Text style={[styles.content, isDarkMode ? styles.darkText : styles.lightText]}>{entry.content}</Text>
       {entry.imageUri && <Image source={{ uri: entry.imageUri }} style={styles.image} />}
- 
+
       <TouchableOpacity onPress={() => setModalVisible(true)} style={styles.deleteButton}>
-        <Text style={styles.buttonText}>Supprimer l'Entrée</Text>
+        <Text style={[styles.buttonText, isDarkMode ? styles.darkText : styles.lightText]}>Supprimer l'Entrée</Text>
       </TouchableOpacity>
- 
-      {/* Modal de Confirmation */}
+
       <Modal
         transparent={true}
         animationType="slide"
@@ -57,10 +58,10 @@ export default function EntryDetailsScreen() {
             <Text>Voulez-vous vraiment supprimer cette entrée ?</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
-                <Text style={styles.buttonText}>Annuler</Text>
+                <Text style={[styles.buttonText, isDarkMode ? styles.darkText : styles.lightText]}>Annuler</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={deleteEntry} style={styles.deleteButton}>
-                <Text style={styles.buttonText}>Supprimer</Text>
+                <Text style={[styles.buttonText, isDarkMode ? styles.darkText : styles.lightText]}>Supprimer</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -69,12 +70,17 @@ export default function EntryDetailsScreen() {
     </View>
   );
 }
- 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+  lightContainer: {
     backgroundColor: '#f4f4f4',
+  },
+  darkContainer: {
+    backgroundColor: '#333',
   },
   date: {
     fontSize: 14,
@@ -96,15 +102,18 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     alignSelf: 'center',
-    marginVertical: 20,
     borderRadius: 10,
+    marginBottom: 20,
   },
   deleteButton: {
-    backgroundColor: '#E74C3C',
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: '#FF6347',
+    padding: 10,
+    borderRadius: 5,
     alignItems: 'center',
-    marginTop: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
   modalBackground: {
     flex: 1,
@@ -113,11 +122,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: 'white',
+    width: '80%',
+    backgroundColor: '#fff',
     borderRadius: 10,
-    alignItems: 'center',
+    padding: 20,
   },
   modalTitle: {
     fontSize: 18,
@@ -127,18 +135,18 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
   },
   cancelButton: {
-    padding: 10,
     backgroundColor: '#ccc',
+    padding: 10,
     borderRadius: 5,
+    flex: 1,
     marginRight: 10,
   },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
+  darkText: {
+    color: '#fff',
+  },
+  lightText: {
+    color: '#000',
   },
 });
- 
- 
