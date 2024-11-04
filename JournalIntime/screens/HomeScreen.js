@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, Button, FlatList, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen({ navigation }) {
   const [entries, setEntries] = useState([]);
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      const savedEntries = await AsyncStorage.getItem('journalEntries');
-      if (savedEntries) {
-        setEntries(JSON.parse(savedEntries));
-      }
-    };
-    fetchEntries();
-  }, []);
+  const loadEntries = async () => {
+    const savedEntries = await AsyncStorage.getItem('journalEntries');
+    if (savedEntries) {
+      setEntries(JSON.parse(savedEntries));
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadEntries();
+    }, [])
+  );
 
   return (
     <View>
@@ -23,8 +27,9 @@ export default function HomeScreen({ navigation }) {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate('EntryDetails', { entry: item })}>
-            <Text>{item.date}</Text>
+            <Text style={{ fontWeight: 'bold' }}>{item.date}</Text>
             <Text>{item.title}</Text>
+            <Text>{item.content.slice(0, 30)}...</Text>
           </TouchableOpacity>
         )}
       />
