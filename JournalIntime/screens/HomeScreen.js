@@ -4,19 +4,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ThemeContext } from '../ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 export default function HomeScreen() {
   const { isDarkMode } = useContext(ThemeContext);
   const [entries, setEntries] = useState([]);
+  const [selectedImportance, setSelectedImportance] = useState('tout');
   const navigation = useNavigation();
 
   useEffect(() => {
-    // Configure le bouton des paramètres dans l'en-tête
     navigation.setOptions({
       headerStyle: {
-        backgroundColor: isDarkMode ? '#333' : '#4CAF50', // Couleur de fond en fonction du mode
+        backgroundColor: isDarkMode ? '#333' : '#4CAF50',
       },
-      headerTintColor: isDarkMode ? '#fff' : '#000', // Couleur du texte en fonction du mode
+      headerTintColor: isDarkMode ? '#fff' : '#000',
       headerRight: () => (
         <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
           <Ionicons name="settings" size={24} color={isDarkMode ? '#fff' : '#000'} style={{ marginRight: 15 }} />
@@ -38,6 +39,24 @@ export default function HomeScreen() {
     }, [])
   );
 
+  const filteredEntries = entries.filter(entry => {
+    if (selectedImportance === 'tout') return true;
+    return entry.importance === selectedImportance;
+  });
+
+  const renderEntry = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.entryContainer, isDarkMode ? styles.darkEntryContainer : styles.lightEntryContainer]}
+      onPress={() => navigation.navigate('EntryDetails', { entry: item })}
+    >
+      <Text style={[styles.entryDate, isDarkMode ? styles.darkText : styles.lightText]}>{item.date}</Text>
+      <Text style={[styles.entryTitle, isDarkMode ? styles.darkText : styles.lightText]}>{item.title}</Text>
+      <Text style={[styles.entryContent, isDarkMode ? styles.darkText : styles.lightText]}>
+        {item.content.slice(0, 30)}...
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
       <TouchableOpacity
@@ -49,21 +68,21 @@ export default function HomeScreen() {
         </Text>
       </TouchableOpacity>
 
+      <Text style={[styles.header, isDarkMode ? styles.darkText : styles.lightText]}>Filtrer par Importance :</Text>
+      <Picker
+        selectedValue={selectedImportance}
+        style={[styles.picker, isDarkMode ? styles.darkPicker : styles.lightPicker]}
+        onValueChange={(itemValue) => setSelectedImportance(itemValue)}
+      >
+        <Picker.Item label="Tout" value="tout" />
+        <Picker.Item label="Important" value="important" />
+        <Picker.Item label="Moins Important" value="moins important" />
+      </Picker>
+
       <FlatList
-        data={entries}
+        data={filteredEntries}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.entryContainer, isDarkMode ? styles.darkEntryContainer : styles.lightEntryContainer]}
-            onPress={() => navigation.navigate('EntryDetails', { entry: item })}
-          >
-            <Text style={[styles.entryDate, isDarkMode ? styles.darkText : styles.lightText]}>{item.date}</Text>
-            <Text style={[styles.entryTitle, isDarkMode ? styles.darkText : styles.lightText]}>{item.title}</Text>
-            <Text style={[styles.entryContent, isDarkMode ? styles.darkText : styles.lightText]}>
-              {item.content.slice(0, 30)}...
-            </Text>
-          </TouchableOpacity>
-        )}
+        renderItem={renderEntry}
       />
     </View>
   );
@@ -131,5 +150,21 @@ const styles = StyleSheet.create({
   },
   entryContent: {
     fontSize: 16,
+  },
+  header: {
+    fontSize: 24,
+    marginVertical: 10,
+    fontWeight: 'bold',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+  },
+  lightPicker: {
+    backgroundColor: '#fff',
+  },
+  darkPicker: {
+    backgroundColor: '#444',
+    color: '#fff',
   },
 });

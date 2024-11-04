@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, Button, Image, StyleSheet, TouchableOpacity, Text, Picker } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,7 @@ export default function AddEntryScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
+  const [importance, setImportance] = useState('moins important'); 
   const navigation = useNavigation();
 
   const pickImage = async () => {
@@ -39,6 +40,7 @@ export default function AddEntryScreen() {
       title,
       content,
       imageUri: image,
+      importance, 
     };
 
     const savedEntries = await AsyncStorage.getItem('journalEntries');
@@ -64,6 +66,18 @@ export default function AddEntryScreen() {
         multiline
         style={[styles.input, styles.textArea, isDarkMode ? styles.darkInput : styles.lightInput]}
       />
+      
+      {/* Picker pour choisir l'importance */}
+      <Text style={[styles.label, isDarkMode ? styles.darkText : styles.lightText]}>Importance:</Text>
+      <Picker
+        selectedValue={importance}
+        style={[styles.picker, isDarkMode ? styles.darkInput : styles.lightInput]}
+        onValueChange={(itemValue) => setImportance(itemValue)}
+      >
+        <Picker.Item label="Moins important" value="moins important" />
+        <Picker.Item label="Important" value="important" />
+      </Picker>
+
       <TouchableOpacity style={[styles.button, isDarkMode ? styles.darkButton : styles.lightButton]} onPress={pickImage}>
         <Text style={[styles.buttonText, isDarkMode ? styles.darkText : styles.lightText]}>Choisir une Image</Text>
       </TouchableOpacity>
@@ -119,6 +133,15 @@ const styles = StyleSheet.create({
   darkText: {
     color: '#fff',
   },
+  label: {
+    marginVertical: 10,
+    fontSize: 16,
+  },
+  picker: {
+    height: 50,
+    width: '100%',
+    marginBottom: 15,
+  },
   image: {
     width: 200,
     height: 200,
@@ -127,7 +150,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   darkInput: {
-    backgroundColor: '#555', // Couleur d'arrière-plan pour les champs de saisie en mode sombre
+    backgroundColor: '#555',
     borderColor: '#777',
     color: '#fff',
   },
